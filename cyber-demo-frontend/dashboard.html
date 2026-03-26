@@ -34,13 +34,13 @@
 
 async function loadPhotos(){
 
-    const res = await fetch("http://localhost:5000/photos");
+    const res = await fetch("https://cyber-1-7t89.onrender.com/photos");
     const data = await res.json();
 
     let html = "";
 
     data.forEach(file=>{
-        html += `<img src="http://localhost:5000/uploads/${file}" />`;
+        html += `<img src="https://cyber-1-7t89.onrender.com/uploads/${file}" />`;
     });
 
     document.getElementById("grid").innerHTML = html;

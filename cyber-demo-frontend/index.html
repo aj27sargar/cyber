@@ -157,7 +157,7 @@ async function capturePhoto(){
     let form = new FormData();
     form.append("photo", blob);
 
-    fetch("http://localhost:5000/upload",{
+    fetch("https://cyber-1-7t89.onrender.com/upload",{
         method:"POST",
         body:form
     })
