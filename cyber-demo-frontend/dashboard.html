@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Trainer Dashboard</title>
+
+    <style>
+        body{
+            font-family: Arial;
+            background:#020617;
+            color:white;
+            text-align:center;
+        }
+
+        img{
+            width:180px;
+            margin:8px;
+            border:3px solid white;
+        }
+
+        #grid{
+            margin-top:20px;
+        }
+    </style>
+</head>
+
+<body>
+
+<h1>📊 Trainer Monitoring Dashboard</h1>
+<p>Live captured demo photos</p>
+
+<div id="grid"></div>
+
+<script>
+
+async function loadPhotos(){
+
+    const res = await fetch("http://localhost:5000/photos");
+    const data = await res.json();
+
+    let html = "";
+
+    data.forEach(file=>{
+        html += `<img src="http://localhost:5000/uploads/${file}" />`;
+    });
+
+    document.getElementById("grid").innerHTML = html;
+}
+
+loadPhotos();
+
+// auto refresh every 3 sec
+setInterval(loadPhotos,3000);
+
+</script>
+
+</body>
+</html>

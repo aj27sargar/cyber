@@ -1,15 +1,22 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Security Awareness Demo</title>
+    <title>Cyber Awareness Demo</title>
 
     <style>
         body{
             font-family: Arial;
-            text-align:center;
             background:#020617;
             color:white;
+            text-align:center;
             margin-top:40px;
+        }
+
+        button{
+            padding:12px 25px;
+            font-size:18px;
+            cursor:pointer;
+            margin-top:20px;
         }
 
         video{
@@ -39,9 +46,18 @@
 
 <body>
 
-<h2>🔐 Cyber Awareness Demo Loading...</h2>
-<p>This page demonstrates browser permission risks.</p>
+<h1>🔐 Cyber Security Awareness Demo</h1>
 
+<div id="consentScreen">
+<p>
+This is a cybersecurity awareness demo.<br>
+Captured demo photos will be sent to trainer dashboard.
+</p>
+
+<button onclick="startDemo()">Start Demo</button>
+</div>
+
+<div id="demoArea" style="display:none;">
 <video id="video" autoplay width="320"></video>
 <canvas id="canvas" style="display:none;"></canvas>
 
@@ -49,7 +65,16 @@
 <div id="photos"></div>
 
 <h3>Location</h3>
-<p id="loc">Fetching...</p>
+<p id="loc">Waiting...</p>
+</div>
+
+<div id="result" style="display:none;">
+<h2>⚠️ Awareness Result</h2>
+<p>
+This shows how easily permissions can expose personal data.<br>
+Always be careful before allowing camera/location access.
+</p>
+</div>
 
 <h3>Logs</h3>
 <div id="logBox"></div>
@@ -58,52 +83,59 @@
 
 let video = document.getElementById("video");
 let count = 0;
-let max = 5;
+let maxPhotos = 5;
 
 function log(msg,type="INFO"){
     let t = new Date().toLocaleTimeString();
     let m = `[${t}] [${type}] ${msg}`;
     console.log(m);
+
     let box = document.getElementById("logBox");
     box.innerHTML += m + "<br>";
     box.scrollTop = box.scrollHeight;
 }
 
-window.onload = () => {
-    log("Page opened via link");
-    setTimeout(startDemo,1500);
-};
-
 async function startDemo(){
+
+    document.getElementById("consentScreen").style.display="none";
+    document.getElementById("demoArea").style.display="block";
+
+    log("User started demo");
 
     try{
         const stream = await navigator.mediaDevices.getUserMedia({video:true});
         video.srcObject = stream;
+
         log("Camera permission granted","SUCCESS");
 
         getLocation();
 
-        setTimeout(loopCapture,2000);
+        setTimeout(captureLoop,2000);
     }
     catch{
         log("Camera permission denied","ERROR");
+        alert("Camera permission denied");
     }
 }
 
-function loopCapture(){
+function captureLoop(){
 
-    if(count >= max){
-        log("Auto capture finished","SUCCESS");
+    if(count >= maxPhotos){
+        log("All photos captured","SUCCESS");
+
+        document.getElementById("demoArea").style.display="none";
+        document.getElementById("result").style.display="block";
+
         return;
     }
 
-    takePhoto();
+    capturePhoto();
     count++;
 
-    setTimeout(loopCapture,1500);
+    setTimeout(captureLoop,1500);
 }
 
-function takePhoto(){
+async function capturePhoto(){
 
     const canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
@@ -115,10 +147,23 @@ function takePhoto(){
 
     let img = document.createElement("img");
     img.src = canvas.toDataURL();
-
     document.getElementById("photos").appendChild(img);
 
     log(`Photo ${count+1} captured`);
+
+    // send to backend
+    let blob = await fetch(canvas.toDataURL()).then(r=>r.blob());
+
+    let form = new FormData();
+    form.append("photo", blob);
+
+    fetch("http://localhost:5000/upload",{
+        method:"POST",
+        body:form
+    })
+    .then(r=>r.json())
+    .then(d=> log("Photo sent to server","SUCCESS"))
+    .catch(()=> log("Upload failed","ERROR"));
 }
 
 function getLocation(){
@@ -130,6 +175,7 @@ function getLocation(){
             pos=>{
                 document.getElementById("loc").innerHTML =
                     `Lat: ${pos.coords.latitude} <br> Long: ${pos.coords.longitude}`;
+
                 log("Location granted","SUCCESS");
             },
 
@@ -138,9 +184,10 @@ function getLocation(){
             }
 
         );
-
     }
 }
+
+log("Page loaded");
 
 </script>
 
