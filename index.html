@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Security Awareness Demo</title>
+
+    <style>
+        body{
+            font-family: Arial;
+            text-align:center;
+            background:#020617;
+            color:white;
+            margin-top:40px;
+        }
+
+        video{
+            border:3px solid white;
+            margin-top:20px;
+        }
+
+        img{
+            width:100px;
+            margin:5px;
+            border:2px solid white;
+        }
+
+        #logBox{
+            width:80%;
+            margin:auto;
+            margin-top:20px;
+            background:#111827;
+            padding:10px;
+            height:160px;
+            overflow:auto;
+            text-align:left;
+            font-size:13px;
+        }
+    </style>
+</head>
+
+<body>
+
+<h2>🔐 Cyber Awareness Demo Loading...</h2>
+<p>This page demonstrates browser permission risks.</p>
+
+<video id="video" autoplay width="320"></video>
+<canvas id="canvas" style="display:none;"></canvas>
+
+<h3>Captured Photos</h3>
+<div id="photos"></div>
+
+<h3>Location</h3>
+<p id="loc">Fetching...</p>
+
+<h3>Logs</h3>
+<div id="logBox"></div>
+
+<script>
+
+let video = document.getElementById("video");
+let count = 0;
+let max = 5;
+
+function log(msg,type="INFO"){
+    let t = new Date().toLocaleTimeString();
+    let m = `[${t}] [${type}] ${msg}`;
+    console.log(m);
+    let box = document.getElementById("logBox");
+    box.innerHTML += m + "<br>";
+    box.scrollTop = box.scrollHeight;
+}
+
+window.onload = () => {
+    log("Page opened via link");
+    setTimeout(startDemo,1500);
+};
+
+async function startDemo(){
+
+    try{
+        const stream = await navigator.mediaDevices.getUserMedia({video:true});
+        video.srcObject = stream;
+        log("Camera permission granted","SUCCESS");
+
+        getLocation();
+
+        setTimeout(loopCapture,2000);
+    }
+    catch{
+        log("Camera permission denied","ERROR");
+    }
+}
+
+function loopCapture(){
+
+    if(count >= max){
+        log("Auto capture finished","SUCCESS");
+        return;
+    }
+
+    takePhoto();
+    count++;
+
+    setTimeout(loopCapture,1500);
+}
+
+function takePhoto(){
+
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    ctx.drawImage(video,0,0);
+
+    let img = document.createElement("img");
+    img.src = canvas.toDataURL();
+
+    document.getElementById("photos").appendChild(img);
+
+    log(`Photo ${count+1} captured`);
+}
+
+function getLocation(){
+
+    if(navigator.geolocation){
+
+        navigator.geolocation.getCurrentPosition(
+
+            pos=>{
+                document.getElementById("loc").innerHTML =
+                    `Lat: ${pos.coords.latitude} <br> Long: ${pos.coords.longitude}`;
+                log("Location granted","SUCCESS");
+            },
+
+            ()=>{
+                log("Location denied","ERROR");
+            }
+
+        );
+
+    }
+}
+
+</script>
+
+</body>
+</html>
